@@ -21,7 +21,8 @@ If you are using DirectAdmin (http://www.directadmin.com/), you will have to app
 'direct_admin_dbuser' => '<db_user>', // Under this DB is created	
 'direct_admin_dbpass' => '<db_pass>', // Under this DB user is created	
 
-// If you are going to use paypal add these in settings
+// If you are going to use paypal add these in settings. The seller_paypay_enabled line is required. Set to false if not using paypal
+'seller_paypal_enabled' => true, //REQUIRED even if not using paypal. lines below only needed if using paypal
 'seller_paypal_mail' => 'remdex@gmail.com',
 // Left attribtues is button payment options right is options
 // p -> period in days, r -> request number to sell
@@ -32,7 +33,7 @@ If you are using DirectAdmin (http://www.directadmin.com/), you will have to app
     	 '1Month' => array('p' => 31,'r' => 0),
 ),
 'seller_attributes' => "Remigijus Kiminas\nDarželio 31\nŠiauliai\nLithuania\nremdex@gmail.com\nTax ID: 591583",		
-'seller_paypal_enabled' => true,     
+    
 
 
 3. In db section add
