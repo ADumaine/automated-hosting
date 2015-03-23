@@ -4,6 +4,9 @@ Install
 1. Install fresh version from https://github.com/LiveHelperChat/livehelperchat
 
 2. Add these settings in settings/settings.ini.php file under site section
+
+'support_mail' => 'info@livehelperchat.com',
+'sender_mail' => 'info@livehelperchat.com',	  
 'seller_url' => 'http://livehelperchat.com',// Change to main site url
 'seller_domain' => 'livehelperchat.com',// Change to main site url
 'seller_mail' => 'info@livehelperchat.com', // Change mail
@@ -12,7 +15,9 @@ Install
 'instance_handler' => 'erLhcoreClassInstanceDBMysql', // erLhcoreClassInstanceDBMysql - mysql, erLhcoreClassInstanceDBDirectAdmin - direct admin
 'access_log_path' => '/var/log/nginx/access_chat_manager_client.log',  //or '/var/log/apache2/access_chat_manager_client.log' use your site's log name
 'http_mode' => 'http://', // Set http:// or https://
-
+'phoneattributes' => array(
+),
+      
 If you are using DirectAdmin (http://www.directadmin.com/), you will have to append these also
 'direct_admin_user' => '<direct_admin_user>',		
 'direct_admin_pass' => 'direct_admin_password>',
@@ -45,7 +50,7 @@ If you are using DirectAdmin (http://www.directadmin.com/), you will have to app
 
 6. Active extension in fresh installed LHC
 'extensions' =>
-      array ('instance')
+      array ('instanceoverride','instance')
 
 7. Edit var/autolaods/lhextension_autoload.php
 And make it look like
@@ -86,6 +91,7 @@ Make sure you have provided correct path to access log in settings.ini.php in st
 12. All subdomains should be pointed to new copied directory.  Update Apache virtual hosts or nginx as needed.  See nginx configuration below.
 
 13. Edit var/autoloads/lhextension_autoload.php in copied directory and make it look like
+
 return array(
 		'erLhcoreClassModelInstance' 		 => 'extension/instancecustomer/classes/erlhcoreclassmodelinstance.php',
 		'erLhcoreClassInstance' 		 => 'extension/instancecustomer/classes/erlhcoreclassinstance.php',
@@ -98,7 +104,7 @@ return array(
 15. Activate extension. It should look like
 'extensions' =>
       array (
-      		'instancecustomer'
+      		'instancecustomeroverride','instancecustomer'
 ),
 
 16. Change in settings
@@ -126,15 +132,20 @@ return array(
 
 That's it.
 
-18. Now if you are using paypal edit your paypal button template. I recommend just create custom theme and override it also.
+18. Now if you are using paypal edit your paypal button template. I recommend just create extension and override it also.
+
 instancecustomer/design/instancecustomertheme/tpl/lhinstance/billing_paypal.tpl.php
 You should also set in your paypal button that it should send data in UTF8
 And notify url provide
 E.g
 http://manager.livehelperchat.com/instance/paypalipn
 
-18. Don't forget to clear cache
+19. Don't forget to clear cache
 
+20. All changes you want to apply to automated hosting extension should go to extension folder named <bin name><override>
+E.g
+instancecustomeroverride
+instanceoverride
 /******************/
 Manager nginx example
 /******************/

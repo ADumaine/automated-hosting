@@ -1,0 +1,1 @@
+<?php $parts_top_menu_online_users_enabled = erLhcoreClassInstance::getInstance()->onlinevisitortrck_supported == 1?>

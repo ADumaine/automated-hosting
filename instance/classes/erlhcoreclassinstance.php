@@ -45,9 +45,10 @@ class erLhcoreClassInstance{
 	   
 	   	$url = erConfigClassLhConfig::getInstance()->getSetting( 'site', 'http_mode').$instance->address . '.' . $cfg->getSetting( 'site', 'seller_domain').'/index.php/instance/remove/' . $instance->id . '/' . date('Ym') . '/' . $hash;
 	   	$response = erLhcoreClassModelChatOnlineUser::executeRequest($url);
-	   
+	   	   	
 	   	$responseData = json_decode($response);
-	   	 
+	   	   	
+	   	
 	   	if (isset($responseData->error) && $responseData->error == false){
 	   		self::deleteDatabase($instance->id);
 	   		return true;
@@ -108,6 +109,11 @@ class erLhcoreClassInstance{
 	   	$sql = file_get_contents('extension/instance/doc/db_3.sql');
 	   	$sql = str_replace($searchArray, $replaceArray, $sql);
 	   	$db->query($sql);
+	   	
+	   	$dbPostUpdate = ltrim(erLhcoreClassDesign::design('db_post_update/db.sql'),'/');
+	   	if (file_exists($dbPostUpdate)){
+	   	    $db->query(file_get_contents($dbPostUpdate));
+	   	}
 	   	
 	   	// Insert default user language
 	   	if ($instance->locale != ''){

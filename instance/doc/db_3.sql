@@ -11,6 +11,7 @@ CREATE TABLE `lh_abstract_auto_responder` (
   `siteaccess` varchar(3) NOT NULL,
   `wait_message` varchar(250) NOT NULL,
   `wait_timeout` int(11) NOT NULL,
+  `dep_id` int(11) NOT NULL,
   `position` int(11) NOT NULL,
   `timeout_message` varchar(250) NOT NULL,
   PRIMARY KEY (`id`),
@@ -47,12 +48,14 @@ CREATE TABLE `lh_abstract_proactive_chat_invitation` (
   `time_on_site` int(11) NOT NULL,
   `pageviews` int(11) NOT NULL,
   `message` text NOT NULL,
+  `message_returning` text NOT NULL,
   `executed_times` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
   `wait_message` varchar(250) NOT NULL,
   `timeout_message` varchar(250) NOT NULL,
   `wait_timeout` int(11) NOT NULL,
   `operator_name` varchar(100) NOT NULL,
+  `message_returning_nick` varchar(100) NOT NULL,
   `position` int(11) NOT NULL,
   `identifier` varchar(50) NOT NULL,
   `requires_email` int(11) NOT NULL,
@@ -80,12 +83,15 @@ CREATE TABLE `lh_chat` (
 				  `status_sub` int(11) NOT NULL DEFAULT '0',
 				  `time` int(11) NOT NULL,
 				  `user_id` int(11) NOT NULL,
+				  `user_closed_ts` int(11) NOT NULL,
 				  `hash` varchar(40) NOT NULL,
 				  `referrer` text NOT NULL,
         	   	  `session_referrer` text NOT NULL,
         	   	  `chat_variables` text NOT NULL,
         	   	  `remarks` text NOT NULL,
 				  `ip` varchar(100) NOT NULL,
+				  `chat_locale_to` varchar(10) NOT NULL,
+				  `chat_locale` varchar(10) NOT NULL,
 				  `dep_id` int(11) NOT NULL,
 				  `user_status` int(11) NOT NULL DEFAULT '0',
 				  `support_informed` int(11) NOT NULL DEFAULT '0',
@@ -110,7 +116,7 @@ CREATE TABLE `lh_chat` (
 				  `lat` varchar(10) NOT NULL,
 				  `lon` varchar(10) NOT NULL,
 				  `city` varchar(100) NOT NULL,
-				  `operation` varchar(200) NOT NULL,
+				  `operation` text NOT NULL,
 				  `operation_admin` varchar(200) NOT NULL,
 				  `mail_send` int(11) NOT NULL,
         	   	  `screenshot_id` int(11) NOT NULL,
@@ -172,6 +178,7 @@ INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`
 ('chatbox_data',	'a:6:{i:0;b:0;s:20:\"chatbox_auto_enabled\";i:0;s:19:\"chatbox_secret_hash\";s:{chat_box_hash_length}:\"{chat_box_hash}\";s:20:\"chatbox_default_name\";s:7:\"Chatbox\";s:17:\"chatbox_msg_limit\";i:50;s:22:\"chatbox_default_opname\";s:7:\"Manager\";}',	0,	'Chatbox configuration',	1),
 ('customer_company_name',	'Live Support',	0,	'Your company name - visible in bottom left corner',	0),
 ('customer_site_url',	'#',	0,	'Your site URL address',	0),
+('banned_ip_range','',0,'Which ip should not be allowed to chat',0),
 ('disable_popup_restore',	'0',	0,	'Disable option in widget to open new window. 0 - no, 1 - restore icon will be hidden',	0),
 ('export_hash',	'{export_hash_chats}',	0,	'Chats export secret hash',	0),
 ('geo_data',	'a:8:{i:0;b:0;s:21:\"geo_detection_enabled\";i:1;s:22:\"geo_service_identifier\";s:10:\"mod_geoip2\";s:23:\"mod_geo_ip_country_code\";s:18:\"GEOIP_COUNTRY_CODE\";s:23:\"mod_geo_ip_country_name\";s:18:\"GEOIP_COUNTRY_NAME\";s:20:\"mod_geo_ip_city_name\";s:10:\"GEOIP_CITY\";s:19:\"mod_geo_ip_latitude\";s:14:\"GEOIP_LATITUDE\";s:20:\"mod_geo_ip_longitude\";s:15:\"GEOIP_LONGITUDE\";}',	0,	'',	1),
@@ -214,7 +221,7 @@ CREATE TABLE `lh_chat_online_user` (
                   `visitor_tz` varchar(50) NOT NULL,
                   `user_country_code` varchar(50) NOT NULL,
                   `user_country_name` varchar(50) NOT NULL,
-                  `operator_message` varchar(250) NOT NULL,
+                  `operator_message` text NOT NULL,
                   `operator_user_proactive` varchar(100) NOT NULL,
                   `operator_user_id` int(11) NOT NULL,
                   `message_seen` int(11) NOT NULL,
@@ -826,6 +833,7 @@ CREATE TABLE `lh_abstract_form_collected` (
   `form_id` int(11) NOT NULL,
   `ctime` int(11) NOT NULL,
   `ip` varchar(250) NOT NULL,
+  `identifier` varchar(250) NOT NULL,
   `content` longtext NOT NULL,
   PRIMARY KEY (`id`),
   KEY `form_id` (`form_id`)
@@ -850,29 +858,6 @@ COMMENT='';
 INSERT INTO `lh_abstract_email_template` (`id`, `name`, `from_name`, `from_name_ac`, `from_email`, `from_email_ac`, `content`, `subject`, `subject_ac`, `reply_to`, `reply_to_ac`, `recipient`, `bcc_recipients`) VALUES
 (9,	'Chat was accepted',	'Live support',	0,	'',	0,	'Hello,\r\n\r\nOperator {user_name} has accepted a chat [{chat_id}]\r\n\r\nUser request data:\r\nName: {name}\r\nEmail: {email}\r\nPhone: {phone}\r\nDepartment: {department}\r\nCountry: {country}\r\nCity: {city}\r\nIP: {ip}\r\n\r\nMessage:\r\n{message}\r\n\r\nURL of page from which user has send request:\r\n{url_request}\r\n\r\nClick to accept chat automatically\r\n{url_accept}\r\n\r\nSincerely,\r\nLive Support Team',	'Chat was accepted [{chat_id}]',	0,	'',	0,	'',	'');
 
-INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES
-('doc_sharer',	'a:10:{i:0;b:0;s:17:\"libre_office_path\";s:20:\"/usr/bin/libreoffice\";s:19:\"supported_extension\";s:51:\"ppt,pptx,doc,odp,docx,xlsx,txt,xls,xlsx,pdf,rtf,odt\";s:18:\"background_process\";i:1;s:13:\"max_file_size\";i:4;s:13:\"pdftoppm_path\";s:17:\"/usr/bin/pdftoppm\";s:13:\"PdftoppmLimit\";i:5;s:14:\"pdftoppm_limit\";i:0;s:14:\"http_user_name\";s:6:\"apache\";s:20:\"http_user_group_name\";s:6:\"apache\";}',	0,	'Libreoffice path',	1);
-
-CREATE TABLE `lh_doc_share` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  `desc` text NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `active` int(11) NOT NULL,
-  `converted` int(11) NOT NULL,
-  `file_name` varchar(250) NOT NULL,
-  `file_path` varchar(250) NOT NULL,
-  `file_name_upload` varchar(250) NOT NULL,
-  `file_size` int(11) NOT NULL,
-  `type` varchar(250) NOT NULL,
-  `ext` varchar(250) NOT NULL,
-  `pdf_file` varchar(250) NOT NULL,
-  `pages_pdf_count` int(11) NOT NULL,
-  `pdf_to_img_converted` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('autoclose_timeout','0', 0, 'Automatic chats closing. 0 - disabled, n > 0 time in minutes before chat is automatically closed', '0');
 INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('autopurge_timeout','0', 0, 'Automatic chats purging. 0 - disabled, n > 0 time in minutes before chat is automatically deleted', '0');
 
@@ -896,42 +881,60 @@ COMMENT='';
 
 CREATE TABLE `lh_abstract_widget_theme` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  `onl_bcolor` varchar(10) NOT NULL,
-  `text_color` varchar(10) NOT NULL,
-  `online_image` varchar(250) NOT NULL,
-  `online_image_path` varchar(250) NOT NULL,
-  `offline_image` varchar(250) NOT NULL,
-  `offline_image_path` varchar(250) NOT NULL,
-  `logo_image` varchar(250) NOT NULL,
-  `logo_image_path` varchar(250) NOT NULL,
-  `need_help_image` varchar(250) NOT NULL,
-  `header_background` varchar(10) NOT NULL,
-  `widget_border_color` varchar(10) NOT NULL,
-  `need_help_tcolor` varchar(10) NOT NULL,
-  `need_help_bcolor` varchar(10) NOT NULL,
-  `need_help_border` varchar(10) NOT NULL,
-  `need_help_close_bg` varchar(10) NOT NULL,
-  `need_help_hover_bg` varchar(10) NOT NULL,
-  `need_help_close_hover_bg` varchar(10) NOT NULL,
-  `need_help_image_path` varchar(250) NOT NULL,
-  `custom_status_css` text NOT NULL,
-  `custom_container_css` text NOT NULL,
-  `custom_widget_css` text NOT NULL,
-  `need_help_header` varchar(250) NOT NULL,
-  `bor_bcolor` varchar(10) NOT NULL DEFAULT 'e3e3e3',
-  `need_help_text` varchar(250) NOT NULL,
-  `online_text` varchar(250) NOT NULL,
-  `offline_text` varchar(250) NOT NULL,
-  `copyright_image` varchar(250) NOT NULL,
-  `copyright_image_path` varchar(250) NOT NULL,
-  `widget_copyright_url` varchar(250) NOT NULL,
-  `intro_operator_text` varchar(250) NOT NULL,
-  `operator_image` varchar(250) NOT NULL,
-  `operator_image_path` varchar(250) NOT NULL,
-  `explain_text` text NOT NULL,
-  `show_copyright` int(11) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`)
+                 `name` varchar(250) NOT NULL,
+                 `onl_bcolor` varchar(10) NOT NULL,
+                 `bor_bcolor` varchar(10) NOT NULL DEFAULT 'e3e3e3',
+                 `text_color` varchar(10) NOT NULL,
+                 `online_image` varchar(250) NOT NULL,
+                 `online_image_path` varchar(250) NOT NULL,
+                 `offline_image` varchar(250) NOT NULL,
+                 `offline_image_path` varchar(250) NOT NULL,
+                 `logo_image` varchar(250) NOT NULL,
+                 `logo_image_path` varchar(250) NOT NULL,
+                 `need_help_image` varchar(250) NOT NULL,
+                 `header_background` varchar(10) NOT NULL,
+                 `need_help_tcolor` varchar(10) NOT NULL,
+                 `need_help_bcolor` varchar(10) NOT NULL,
+                 `need_help_border` varchar(10) NOT NULL,
+                 `need_help_close_bg` varchar(10) NOT NULL,
+                 `need_help_hover_bg` varchar(10) NOT NULL,
+                 `need_help_close_hover_bg` varchar(10) NOT NULL,
+                 `need_help_image_path` varchar(250) NOT NULL,
+                 `custom_status_css` text NOT NULL,
+                 `custom_container_css` text NOT NULL,
+                 `custom_widget_css` text NOT NULL,
+                 `need_help_header` varchar(250) NOT NULL,
+                 `need_help_text` varchar(250) NOT NULL,
+                 `online_text` varchar(250) NOT NULL,
+                 `offline_text` varchar(250) NOT NULL,
+                 `widget_border_color` varchar(10) NOT NULL,
+                 `copyright_image` varchar(250) NOT NULL,
+                 `copyright_image_path` varchar(250) NOT NULL,
+                 `widget_copyright_url` varchar(250) NOT NULL,
+                 `show_copyright` int(11) NOT NULL DEFAULT '1',
+                 `explain_text` text NOT NULL,
+                 `intro_operator_text` varchar(250) NOT NULL,
+                 `operator_image` varchar(250) NOT NULL,
+                 `operator_image_path` varchar(250) NOT NULL,
+                 `minimize_image` varchar(250) NOT NULL,
+                 `minimize_image_path` varchar(250) NOT NULL,
+                 `restore_image` varchar(250) NOT NULL,
+                 `restore_image_path` varchar(250) NOT NULL,
+                 `close_image` varchar(250) NOT NULL,
+                 `close_image_path` varchar(250) NOT NULL,
+                 `popup_image` varchar(250) NOT NULL,
+                 `popup_image_path` varchar(250) NOT NULL,
+                 `hide_close` int(11) NOT NULL,
+                 `hide_popup` int(11) NOT NULL,
+                 `header_height` int(11) NOT NULL,
+                 `support_joined` varchar(250) NOT NULL,
+                 `support_closed` varchar(250) NOT NULL,
+                 `pending_join` varchar(250) NOT NULL,
+                 `noonline_operators` varchar(250) NOT NULL,
+                 `noonline_operators_offline` varchar(250) NOT NULL,
+                 `header_padding` int(11) NOT NULL,
+                 `widget_border_width` int(11) NOT NULL,
+                  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `lh_users_setting_option` (`identifier`, `class`, `attribute`)
@@ -963,3 +966,201 @@ INSERT INTO `lh_users_setting_option` (`identifier`, `class`, `attribute`) VALUE
 INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('show_language_switcher','0',0,'Show users option to switch language at widget',0);
 INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('show_languages','eng,lit,hrv,esp,por,nld,ara,ger,pol,rus,ita,fre,chn,cse,nor,tur,vnm,idn,sve,per,ell,dnk,rou,bgr,tha,geo,fin,alb',0,'Between what languages user should be able to switch',0);
 INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('track_is_online','0',0,'Track is user still on site, chat status checks also has to be enabled',0);
+
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('sharing_auto_allow','0',0,'Do not ask permission for users to see their screen',0);
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('sharing_nodejs_enabled','0',0,'NodeJs support enabled',0);
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('sharing_nodejs_secure','0',0,'Connect to NodeJs in https mode',0);
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('sharing_nodejs_socket_host','',0,'Host where NodeJs is running',0);
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('sharing_nodejs_sllocation','https://cdn.socket.io/socket.io-1.1.0.js',0,'Location of SocketIO JS library',0);
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('disable_js_execution','1',0,'Disable JS execution in Co-Browsing operator window',0);
+
+CREATE TABLE `lh_cobrowse` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `chat_id` int(11) NOT NULL,
+  `mtime` int(11) NOT NULL,
+  `url` varchar(250) NOT NULL,
+  `initialize` longtext NOT NULL,
+  `modifications` longtext NOT NULL,
+  `finished` tinyint(1) NOT NULL,
+  `w` int(11) NOT NULL,
+  `wh` int(11) NOT NULL,
+  `x` int(11) NOT NULL,
+  `y` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `chat_id` (`chat_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('speech_data','a:3:{i:0;b:0;s:8:\"language\";i:7;s:7:\"dialect\";s:5:\"en-US\";}',	1,	'',	1);
+
+CREATE TABLE IF NOT EXISTS `lh_speech_language` (
+                  `id` int(11) NOT NULL AUTO_INCREMENT,
+                  `name` varchar(100) NOT NULL,
+                  PRIMARY KEY (`id`)
+               ) DEFAULT CHARSET=utf8;
+               
+CREATE TABLE IF NOT EXISTS `lh_speech_language_dialect` (
+                  `id` int(11) NOT NULL AUTO_INCREMENT,
+                  `language_id` int(11) NOT NULL,
+                  `lang_name` varchar(100) NOT NULL,
+                  `lang_code` varchar(100) NOT NULL,
+                  PRIMARY KEY (`id`),
+                  KEY `language_id` (`language_id`)
+               ) DEFAULT CHARSET=utf8;
+                              
+CREATE TABLE IF NOT EXISTS `lh_speech_chat_language` (
+                  `id` int(11) NOT NULL AUTO_INCREMENT,
+                  `chat_id` int(11) NOT NULL,
+                  `language_id` int(11) NOT NULL,
+                  `dialect` varchar(50) NOT NULL,
+                  PRIMARY KEY (`id`),
+                  KEY `chat_id` (`chat_id`)
+               ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+               
+INSERT INTO `lh_speech_language` (`id`, `name`) VALUES
+        	   (1,	'Afrikaans'),
+        	   (2,	'Bahasa Indonesia'),
+        	   (3,	'Bahasa Melayu'),
+        	   (4,	'Català'),
+        	   (5,	'Čeština'),
+        	   (6,	'Deutsch'),
+        	   (7,	'English'),
+        	   (8,	'Español'),
+        	   (9,	'Euskara'),
+        	   (10,	'Français'),
+        	   (11,	'Galego'),
+        	   (12,	'Hrvatski'),
+        	   (13,	'IsiZulu'),
+        	   (14,	'Íslenska'),
+        	   (15,	'Italiano'),
+        	   (16,	'Magyar'),
+        	   (17,	'Nederlands'),
+        	   (18,	'Norsk bokmål'),
+        	   (19,	'Polski'),
+        	   (20,	'Português'),
+        	   (21,	'Română'),
+        	   (22,	'Slovenčina'),
+        	   (23,	'Suomi'),
+        	   (24,	'Svenska'),
+        	   (25,	'Türkçe'),
+        	   (26,	'български'),
+        	   (27,	'Pусский'),
+        	   (28,	'Српски'),
+        	   (29,	'한국어'),
+        	   (30,	'中文'),
+        	   (31,	'日本語'),
+        	   (32,	'Lingua latīna');
+        	   
+INSERT INTO `lh_speech_language_dialect` (`id`, `language_id`, `lang_name`, `lang_code`) VALUES
+                (1,	1,	'Afrikaans',	'af-ZA'),
+                (2,	2,	'Bahasa Indonesia',	'id-ID'),
+                (3,	3,	'Bahasa Melayu',	'ms-MY'),
+                (4,	4,	'Català',	'ca-ES'),
+                (5,	5,	'Čeština',	'cs-CZ'),
+                (6,	6,	'Deutsch',	'de-DE'),
+                (7,	7,	'Australia',	'en-AU'),
+                (8,	7,	'Canada',	'en-CA'),
+                (9,	7,	'India',	'en-IN'),
+                (10,	7,	'New Zealand',	'en-NZ'),
+                (11,	7,	'South Africa',	'en-ZA'),
+                (12,	7,	'United Kingdom',	'en-GB'),
+                (13,	7,	'United States',	'en-US'),
+                (14,	8,	'Argentina',	'es-AR'),
+                (15,	8,	'Bolivia',	'es-BO'),
+                (16,	8,	'Chile',	'es-CL'),
+                (17,	8,	'Colombia',	'es-CO'),
+                (18,	8,	'Costa Rica',	'es-CR'),
+                (19,	8,	'Ecuador',	'es-EC'),
+                (20,	8,	'El Salvador',	'es-SV'),
+                (21,	8,	'España',	'es-ES'),
+                (22,	8,	'Estados Unidos',	'es-US'),
+                (23,	8,	'Guatemala',	'es-GT'),
+                (24,	8,	'Honduras',	'es-HN'),
+                (25,	8,	'México',	'es-MX'),
+                (26,	8,	'Nicaragua',	'es-NI'),
+                (27,	8,	'Panamá',	'es-PA'),
+                (28,	8,	'Paraguay',	'es-PY'),
+                (29,	8,	'Perú',	'es-PE'),
+                (30,	8,	'Puerto Rico',	'es-PR'),
+                (31,	8,	'República Dominicana',	'es-DO'),
+                (32,	8,	'Uruguay',	'es-UY'),
+                (33,	8,	'Venezuela',	'es-VE'),
+                (34,	9,	'Euskara',	'eu-ES'),
+                (35,	10,	'Français',	'fr-FR'),
+                (36,	11,	'Galego',	'gl-ES'),
+                (37,	12,	'Hrvatski',	'hr_HR'),
+                (38,	13,	'IsiZulu',	'zu-ZA'),
+                (39,	14,	'Íslenska',	'is-IS'),
+                (40,	15,	'Italia',	'it-IT'),
+                (41,	15,	'Svizzera',	'it-CH'),
+                (42,	16,	'Magyar',	'hu-HU'),
+                (43,	17,	'Nederlands',	'nl-NL'),
+                (44,	18,	'Norsk bokmål',	'nb-NO'),
+                (45,	19,	'Polski',	'pl-PL'),
+                (46,	20,	'Brasil',	'pt-BR'),
+                (47,	20,	'Portugal',	'pt-PT'),
+                (48,	21,	'Română',	'ro-RO'),
+                (49,	22,	'Slovenčina',	'sk-SK'),
+                (50,	23,	'Suomi',	'fi-FI'),
+                (51,	24,	'Svenska',	'sv-SE'),
+                (52,	25,	'Türkçe',	'tr-TR'),
+                (53,	26,	'български',	'bg-BG'),
+                (54,	27,	'Pусский',	'ru-RU'),
+                (55,	28,	'Српски',	'sr-RS'),
+                (56,	29,	'한국어',	'ko-KR'),
+                (57,	30,	'普通话 (中国大陆)',	'cmn-Hans-CN'),
+                (58,	30,	'普通话 (香港)',	'cmn-Hans-HK'),
+                (59,	30,	'中文 (台灣)',	'cmn-Hant-TW'),
+                (60,	30,	'粵語 (香港)',	'yue-Hant-HK'),
+                (61,	31,	'日本語',	'ja-JP'),
+                (62,	32,	'Lingua latīna',	'la');   
+                
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('front_tabs', 'online_users,online_map,pending_chats,active_chats,unread_chats,closed_chats,online_operators', '0', 'Home page tabs order', '0');
+
+ALTER TABLE `lh_chat_online_user`
+ADD `notes` varchar(250) COLLATE 'utf8_general_ci' NOT NULL,
+COMMENT='';
+
+ALTER TABLE `lh_abstract_auto_responder`
+ADD `repeat_number` int(11) NOT NULL DEFAULT '1',
+COMMENT='';
+
+ALTER TABLE `lh_chat`
+ADD `wait_timeout_repeat` int(11) NOT NULL,
+COMMENT='';
+
+ALTER TABLE `lh_abstract_proactive_chat_invitation`
+ADD `repeat_number` int NOT NULL DEFAULT '1',
+COMMENT='';
+
+ALTER TABLE `lh_abstract_email_template`
+ADD `user_mail_as_sender` tinyint(4) NOT NULL,
+COMMENT='';
+
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('translation_data',	'a:6:{i:0;b:0;s:19:\"translation_handler\";s:4:\"bing\";s:19:\"enable_translations\";b:0;s:14:\"bing_client_id\";s:0:\"\";s:18:\"bing_client_secret\";s:0:\"\";s:14:\"google_api_key\";s:0:\"\";}',	0,	'Translation data',	1);
+
+
+ALTER TABLE `lh_group`
+ADD `disabled` int NOT NULL,
+COMMENT='';
+
+ALTER TABLE `lh_group`
+ADD INDEX `disabled` (`disabled`);
+
+ALTER TABLE `lh_abstract_widget_theme`
+ADD `name_company` varchar(250) COLLATE 'utf8_general_ci' NOT NULL AFTER `name`,
+COMMENT='';
+
+ALTER TABLE `lh_users`
+ADD `rec_per_req` tinyint(1) NOT NULL,
+COMMENT='';
+
+ALTER TABLE `lh_users`
+ADD INDEX `rec_per_req` (`rec_per_req`);
+
+INSERT INTO `lh_abstract_email_template` (`id`, `name`, `from_name`, `from_name_ac`, `from_email`, `from_email_ac`, `content`, `subject`, `subject_ac`, `reply_to`, `reply_to_ac`, `recipient`, `bcc_recipients`, `user_mail_as_sender`) VALUES
+(10,	'Permission request',	'Live Helper Chat',	0,	'',	0,	'Hello,\r\n\r\nOperator {user} has requested these permissions\n\r\n{permissions}\r\n\r\nSincerely,\r\nLive Support Team',	'Permission request from {user}',	0,	'',	0,	'',	'',	0);
+
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES ('sharing_nodejs_path','',0,'socket.io path, optional',0);
+
+INSERT INTO `lh_chat_config` (`identifier`, `value`, `type`, `explain`, `hidden`) VALUES
+('autologin_data',	'a:3:{i:0;b:0;s:11:\"secret_hash\";s:16:\"please_change_me\";s:7:\"enabled\";i:0;}',	0,	'Autologin configuration data',	1);
